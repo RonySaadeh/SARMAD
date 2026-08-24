@@ -35,6 +35,10 @@ def listen_for_wake_word() -> None:
     def _callback(indata, frames, time_info, status):
         audio_queue.put(bytes(indata))
 
+    default_input = sd.query_devices(kind="input")
+    print(f"[mic] listening on: {default_input['name']}")
+
+    last_printed = ""
     with sd.RawInputStream(
         samplerate=SAMPLE_RATE,
         blocksize=8000,
@@ -51,6 +55,10 @@ def listen_for_wake_word() -> None:
 
             if not text:
                 continue
+
+            if text != last_printed:
+                print(f"[heard] {text}")
+                last_printed = text
 
             for phrase in config.WAKE_PHRASES:
                 phrase_words = phrase.replace("'", "").split()
