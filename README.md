@@ -8,6 +8,9 @@ This is **v0**: local-only, one user, running in a terminal (or as a background
 process at login). It's the first step toward a fuller "handles my daily life"
 agent — more capabilities get added incrementally from here.
 
+**See [CAPABILITIES.md](CAPABILITIES.md) for exactly what SARMAD can do today
+and its current limitations.**
+
 ## How it works
 
 1. **Wake word** (`sarmad/wake_word.py`) — a small offline speech model
@@ -32,6 +35,10 @@ agent — more capabilities get added incrementally from here.
 5. **Speak** (`sarmad/voice.py`) — the reply is synthesized with
    [edge-tts](https://github.com/rany2/edge-tts) (free Microsoft Edge voices,
    no API key) and played back through Windows.
+6. **Show** (`sarmad/hud.py`, `sarmad/assets/hud.html`) — a small always-on-top,
+   frameless HUD window with a glowing JARVIS-style arc-reactor core. It
+   pulses faster and brightens while listening/thinking/speaking, and shows
+   the last thing you said and SARMAD's reply as on-screen captions.
 
 Nothing but Claude (the "brain") costs money — speech-to-text and
 text-to-speech are both free and local/no-key.
@@ -53,7 +60,12 @@ text-to-speech are both free and local/no-key.
    the unzipped folder.
 4. **Apps SARMAD is allowed to open**: copy `apps.json.example` to `apps.json`
    and edit the paths for apps installed on your machine.
-5. **Run it**: (the first run downloads the local whisper model from Hugging
+5. **HUD window**: the visual HUD uses the Microsoft Edge WebView2 runtime,
+   which ships pre-installed on current Windows 10/11 — nothing to install in
+   most cases. If the HUD window fails to open, install it from
+   https://developer.microsoft.com/microsoft-edge/webview2, or set
+   `ENABLE_HUD=false` in `.env` to run terminal-only.
+6. **Run it**: (the first run downloads the local whisper model from Hugging
    Face automatically — needs internet once, then it's cached and works
    offline)
    ```

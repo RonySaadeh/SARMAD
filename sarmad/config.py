@@ -20,6 +20,8 @@ APPS_CONFIG_PATH = Path(os.environ.get("APPS_CONFIG_PATH", "./apps.json")).expan
 
 ENABLE_POWER_ACTIONS = os.environ.get("ENABLE_POWER_ACTIONS", "false").strip().lower() == "true"
 
+ENABLE_HUD = os.environ.get("ENABLE_HUD", "true").strip().lower() == "true"
+
 MEMORY_DB_PATH = Path(os.environ.get("MEMORY_DB_PATH", "./sarmad_memory.db")).expanduser().resolve()
 
 WAKE_PHRASES = ["sarmad", "sarmad daddy's home", "sarmad daddy is home"]

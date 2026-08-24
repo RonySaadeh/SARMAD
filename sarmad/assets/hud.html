@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SARMAD</title>
+<style>
+  :root {
+    --cyan: #4ff2ff;
+    --cyan-dim: #175055;
+    --cyan-soft: #9fe9ee;
+    --bg: #050b0d;
+  }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    background: var(--bg);
+    overflow: hidden;
+    font-family: Consolas, "Segoe UI", monospace;
+    color: var(--cyan);
+    user-select: none;
+  }
+  #wrap {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    width: 100%; height: 100%;
+  }
+  #core {
+    position: relative;
+    width: 200px; height: 200px;
+  }
+  .ring {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    border: 2px solid var(--cyan-dim);
+    box-shadow: 0 0 12px var(--cyan-dim) inset;
+    transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  }
+  #ring-outer { animation: spin 14s linear infinite; border-style: dashed; }
+  #ring-mid { inset: 22px; animation: spin 9s linear infinite reverse; }
+  #ring-inner { inset: 48px; }
+  #core-glow {
+    position: absolute; inset: 72px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--cyan) 0%, var(--cyan-dim) 70%, transparent 100%);
+    filter: blur(2px);
+    animation: pulse 2.6s ease-in-out infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.06); }
+  }
+  #status {
+    margin-top: 20px;
+    letter-spacing: 4px;
+    font-size: 13px;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px var(--cyan);
+    opacity: 0.9;
+  }
+  #transcript {
+    margin-top: 14px;
+    width: 270px;
+    min-height: 52px;
+    font-size: 11px;
+    line-height: 1.5;
+    text-align: center;
+    opacity: 0.85;
+  }
+  #transcript .you { color: var(--cyan-soft); }
+  #transcript .sarmad { color: var(--cyan); }
+
+  /* --- state variants --- */
+  body.listening .ring {
+    border-color: var(--cyan);
+    box-shadow: 0 0 18px var(--cyan) inset;
+  }
+  body.listening #core-glow { animation-duration: 0.9s; }
+
+  body.thinking #ring-outer { animation-duration: 3s; }
+  body.thinking #ring-mid { animation-duration: 2s; }
+  body.thinking .ring {
+    border-color: var(--cyan-soft);
+  }
+
+  body.speaking #core-glow { animation: pulse 0.35s ease-in-out infinite; }
+  body.speaking .ring {
+    border-color: var(--cyan);
+    box-shadow: 0 0 22px var(--cyan) inset;
+  }
+</style>
+</head>
+<body class="idle">
+  <div id="wrap">
+    <div id="core">
+      <div class="ring" id="ring-outer"></div>
+      <div class="ring" id="ring-mid"></div>
+      <div class="ring" id="ring-inner"></div>
+      <div id="core-glow"></div>
+    </div>
+    <div id="status">Idle — say SARMAD</div>
+    <div id="transcript"></div>
+  </div>
+<script>
+  const STATE_LABELS = {
+    idle: "Idle — say SARMAD",
+    listening: "Listening...",
+    thinking: "Thinking...",
+    speaking: "Speaking..."
+  };
+
+  function setState(state) {
+    document.body.className = state;
+    document.getElementById("status").textContent = STATE_LABELS[state] || state;
+  }
+
+  function setTranscript(userText, replyText) {
+    const el = document.getElementById("transcript");
+    el.innerHTML = "";
+    if (userText) {
+      const you = document.createElement("div");
+      you.className = "you";
+      you.textContent = "You: " + userText;
+      el.appendChild(you);
+    }
+    if (replyText) {
+      const s = document.createElement("div");
+      s.className = "sarmad";
+      s.textContent = "SARMAD: " + replyText;
+      el.appendChild(s);
+    }
+  }
+
+  window.setState = setState;
+  window.setTranscript = setTranscript;
+</script>
+</body>
+</html>
