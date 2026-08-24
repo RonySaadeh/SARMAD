@@ -22,6 +22,10 @@ vision. Update it whenever a capability is added or a limitation is lifted.
 - **See what it's doing.** A small always-on-top HUD window shows a glowing
   status core (idle / listening / thinking / speaking) plus the last thing
   you said and its reply, as captions.
+- **Ask it to look at something through your webcam.** "SARMAD, look at this
+  and tell me if the wiring is right" — it captures one frame and inspects it
+  with Claude's vision. Only fires when you explicitly ask (see limitation
+  below), and the frame is never saved to disk.
 - **Optionally, shut down / restart / sleep / lock your laptop by voice** —
   but only if you've explicitly set `ENABLE_POWER_ACTIONS=true` in `.env`
   (off by default).
@@ -56,6 +60,11 @@ vision. Update it whenever a capability is added or a limitation is lifted.
 - **Local STT is slower than cloud.** Using `faster-whisper` locally (chosen
   to avoid needing an OpenAI key) adds a few seconds of latency per request,
   more on an older/weaker CPU.
+- **Camera is a single still frame, not live video.** It can't watch
+  continuously or track motion — each "look at this" captures one snapshot.
+  The image is sent to Anthropic's API as part of that request (like any
+  Claude vision use), and there's no on-screen indicator besides the HUD
+  showing "thinking" — so treat the wake phrase itself as the on/off switch.
 
 ## Where this is going
 

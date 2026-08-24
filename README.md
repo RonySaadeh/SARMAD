@@ -31,6 +31,10 @@ and its current limitations.**
      scripts (nothing arbitrary — see **Safety** below).
    - `draft_reservation` — open a pre-filled OpenTable search for a restaurant
      so you're one click from confirming (see limitation below).
+   - `look_at_camera` — capture one webcam frame and hand it to Claude's
+     vision to inspect (e.g. "look at this circuit board and tell me if
+     anything looks wrong"). Only fires when you explicitly ask — see
+     **Safety** below.
    - `remember` — save a fact/preference so future conversations know it.
 5. **Speak** (`sarmad/voice.py`) — the reply is synthesized with
    [edge-tts](https://github.com/rany2/edge-tts) (free Microsoft Edge voices,
@@ -94,6 +98,11 @@ text-to-speech are both free and local/no-key.
   credential handling and is a deliberately separate, later milestone.
 - Conversation history and remembered facts are stored locally in
   `sarmad_memory.db` (SQLite) — nothing is synced anywhere.
+- The camera is only opened when Claude calls `look_at_camera`, which the
+  system prompt restricts to cases where you explicitly asked to look at,
+  check, or inspect something — it's never triggered proactively. The
+  captured frame is sent to Anthropic's API as part of that one request (like
+  any Claude vision use) and is not saved to disk or kept in memory storage.
 
 ## What's next
 
