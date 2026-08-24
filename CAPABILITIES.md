@@ -8,8 +8,14 @@ vision. Update it whenever a capability is added or a limitation is lifted.
 - **Wake it by voice.** Say "SARMAD" or "SARMAD, Daddy's home" near your
   laptop's mic and it starts listening — no touching the keyboard.
 - **Have a spoken conversation.** It transcribes what you say, replies out
-  loud, and remembers the conversation and any facts it's told to remember
-  (`remember: I prefer window seats`) across sessions.
+  loud — short and to the point, no preamble — and remembers the conversation
+  and any facts it's told to remember (`remember: I prefer window seats`)
+  across sessions.
+- **Switch models by voice.** Everyday questions run on a fast/cheap model
+  automatically. Say "use Opus" or "use your smartest model" before (or as
+  part of) a hard request and it switches for real reasoning work; say "use
+  your fast model" or "go back to normal" to switch back. It stays on
+  whichever you last picked until you change it again.
 - **Say "create a project for X"** and get a real scaffolded folder on disk
   (files + `git init`) under your configured `Projects/` folder — SARMAD picks
   a reasonable stack and writes starter code from your description.
@@ -60,6 +66,10 @@ vision. Update it whenever a capability is added or a limitation is lifted.
 - **Local STT is slower than cloud.** Using `faster-whisper` locally (chosen
   to avoid needing an OpenAI key) adds a few seconds of latency per request,
   more on an older/weaker CPU.
+- **Model switching is keyword-based, not automatic.** SARMAD doesn't judge
+  whether a task is actually hard — it only switches models when you say a
+  recognized phrase ("use Opus", "use your smartest model", etc.). It won't
+  notice on its own that a question deserved the smarter model.
 - **Camera is a single still frame, not live video.** It can't watch
   continuously or track motion — each "look at this" captures one snapshot.
   The image is sent to Anthropic's API as part of that request (like any

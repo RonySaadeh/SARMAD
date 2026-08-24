@@ -8,6 +8,12 @@ load_dotenv()
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5")
 
+# Model tiers for voice replies: FAST_MODEL handles everyday questions/chat by
+# default; SMART_MODEL is used when the user says something like "use your
+# smartest model" or "use Opus" for a genuinely hard task. See brain.py.
+FAST_MODEL = os.environ.get("FAST_MODEL", "claude-haiku-4-5-20251001")
+SMART_MODEL = os.environ.get("SMART_MODEL", "claude-opus-5")
+
 WHISPER_MODEL_SIZE = os.environ.get("WHISPER_MODEL_SIZE", "base")
 WHISPER_DEVICE = os.environ.get("WHISPER_DEVICE", "cpu")
 EDGE_TTS_VOICE = os.environ.get("EDGE_TTS_VOICE", "en-US-GuyNeural")

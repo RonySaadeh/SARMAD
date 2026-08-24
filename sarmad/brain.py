@@ -1,9 +1,50 @@
 """SARMAD's reasoning core: a Claude tool-calling loop over memory + local tools."""
 
+import re
+
 import anthropic
 
 from sarmad import config, memory
 from sarmad.tools import project_scaffold, reservations, system_control, vision
+
+# Which model handles a request: FAST_MODEL by default for everyday chat, or
+# whichever model the user last explicitly named ("use Opus", "use your
+# smartest model", "go back to your fast model"). The choice persists across
+# turns until the user names a different one.
+_MODEL_ALIASES = {
+    "fast": config.FAST_MODEL,
+    "quick": config.FAST_MODEL,
+    "simple": config.FAST_MODEL,
+    "haiku": config.FAST_MODEL,
+    "default": config.FAST_MODEL,
+    "normal": config.FAST_MODEL,
+    "sonnet": "claude-sonnet-5",
+    "opus": config.SMART_MODEL,
+    "smart": config.SMART_MODEL,
+    "smartest": config.SMART_MODEL,
+    "best": config.SMART_MODEL,
+    "harder": config.SMART_MODEL,
+    "hardest": config.SMART_MODEL,
+    "complex": config.SMART_MODEL,
+    "fable": "claude-fable-5",
+}
+
+_MODEL_HINT_PATTERN = re.compile(
+    r"\b(?:use|switch to|switch back to|go back to)\s+(?:your\s+|the\s+)?"
+    r"(fast|quick|simple|haiku|sonnet|opus|smart(?:est)?|best|harder|hardest|complex|fable|default|normal)"
+    r"(?:\s+model)?\b",
+    re.IGNORECASE,
+)
+
+
+def _resolve_model(user_text: str) -> str:
+    match = _MODEL_HINT_PATTERN.search(user_text)
+    if match:
+        model = _MODEL_ALIASES[match.group(1).lower()]
+        memory.remember_fact("active_model", model)
+        return model
+    return memory.recall_fact("active_model") or config.FAST_MODEL
+
 
 SYSTEM_PROMPT = """You are SARMAD, a personal voice assistant running locally on your
 user's Windows laptop. This gets read aloud by text-to-speech, so be short and
@@ -149,12 +190,15 @@ def process(user_text: str) -> str:
     client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
 
     memory.save_message("user", user_text)
-    system_prompt = SYSTEM_PROMPT.format(facts=memory.all_facts() or "(none yet)")
+    model = _resolve_model(user_text)
+    facts = memory.all_facts()
+    facts.pop("active_model", None)
+    system_prompt = SYSTEM_PROMPT.format(facts=facts or "(none yet)")
     messages = memory.recent_history(limit=20)
 
     while True:
         response = client.messages.create(
-            model=config.ANTHROPIC_MODEL,
+            model=model,
             max_tokens=300,
             system=system_prompt,
             tools=TOOLS,

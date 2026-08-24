@@ -23,7 +23,10 @@ and its current limitations.**
    runs on your CPU).
 3. **Think** (`sarmad/brain.py`) — your request (plus recent conversation
    history and remembered facts about you) goes to Claude, which can call
-   tools to actually do things instead of just talking.
+   tools to actually do things instead of just talking. Everyday questions
+   run on `FAST_MODEL` (cheap and quick); say "use Opus" / "use your smartest
+   model" for a hard task and it switches to `SMART_MODEL`, staying there
+   until you say "use your fast model" / "go back to normal".
 4. **Act** (`sarmad/tools/`) — Claude can:
    - `create_project` — scaffold a new project folder (files + `git init`) from
      a spoken description, under `PROJECTS_DIR`.
