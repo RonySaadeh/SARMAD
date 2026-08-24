@@ -15,8 +15,9 @@ agent — more capabilities get added incrementally from here.
    mic for "SARMAD" / "SARMAD, Daddy's home". This runs fully offline, so it's
    free and private to leave running all the time.
 2. **Listen** (`sarmad/voice.py`) — once woken, SARMAD greets you out loud and
-   records your spoken request, then sends it to OpenAI's Whisper API for
-   accurate transcription.
+   records your spoken request, then transcribes it locally with
+   [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (no API key,
+   runs on your CPU).
 3. **Think** (`sarmad/brain.py`) — your request (plus recent conversation
    history and remembered facts about you) goes to Claude, which can call
    tools to actually do things instead of just talking.
@@ -28,8 +29,12 @@ agent — more capabilities get added incrementally from here.
    - `draft_reservation` — open a pre-filled OpenTable search for a restaurant
      so you're one click from confirming (see limitation below).
    - `remember` — save a fact/preference so future conversations know it.
-5. **Speak** (`sarmad/voice.py`) — the reply is synthesized with OpenAI TTS and
-   played back through Windows.
+5. **Speak** (`sarmad/voice.py`) — the reply is synthesized with
+   [edge-tts](https://github.com/rany2/edge-tts) (free Microsoft Edge voices,
+   no API key) and played back through Windows.
+
+Nothing but Claude (the "brain") costs money — speech-to-text and
+text-to-speech are both free and local/no-key.
 
 ## Setup (Windows)
 
@@ -39,16 +44,18 @@ agent — more capabilities get added incrementally from here.
    .venv\Scripts\activate
    pip install -r requirements.txt
    ```
-2. **API keys**: copy `.env.example` to `.env` and fill in:
-   - `ANTHROPIC_API_KEY` — from https://console.anthropic.com
-   - `OPENAI_API_KEY` — used for speech-to-text and text-to-speech only
+2. **API key**: copy `.env.example` to `.env` and fill in `ANTHROPIC_API_KEY`
+   from https://console.anthropic.com. Speech-to-text and text-to-speech are
+   free/local, so no other key is needed.
 3. **Wake word model**: download a small Vosk English model (e.g.
    `vosk-model-small-en-us-0.15`) from https://alphacephei.com/vosk/models,
    unzip it into the project folder, and point `VOSK_MODEL_PATH` in `.env` at
    the unzipped folder.
 4. **Apps SARMAD is allowed to open**: copy `apps.json.example` to `apps.json`
    and edit the paths for apps installed on your machine.
-5. **Run it**:
+5. **Run it**: (the first run downloads the local whisper model from Hugging
+   Face automatically — needs internet once, then it's cached and works
+   offline)
    ```
    python main.py
    ```

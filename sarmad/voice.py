@@ -1,27 +1,36 @@
-"""Speech I/O: microphone recording, cloud speech-to-text, cloud text-to-speech playback.
+"""Speech I/O: microphone recording, local speech-to-text, free cloud text-to-speech.
 
-Playback uses the Windows-native `winsound` module, so this module is Windows-only
-(matching the rest of SARMAD v0).
+Transcription runs fully locally via faster-whisper (no API key, uses your CPU).
+Playback uses edge-tts, a free wrapper around Microsoft Edge's TTS voices (no
+API key required either) plus `playsound` since edge-tts outputs mp3.
 """
 
+import asyncio
 import io
 import tempfile
 import wave
-import winsound
 from pathlib import Path
 
+import edge_tts
 import numpy as np
 import sounddevice as sd
-from openai import OpenAI
+from faster_whisper import WhisperModel
+from playsound import playsound
 
 from sarmad import config
 
 SAMPLE_RATE = 16000
 CHANNELS = 1
 
+_whisper_model: WhisperModel | None = None
 
-def _client() -> OpenAI:
-    return OpenAI(api_key=config.OPENAI_API_KEY)
+
+def _get_whisper_model() -> WhisperModel:
+    global _whisper_model
+    if _whisper_model is None:
+        # Downloads the model from Hugging Face on first run, then caches it locally.
+        _whisper_model = WhisperModel(config.WHISPER_MODEL_SIZE, device=config.WHISPER_DEVICE, compute_type="int8")
+    return _whisper_model
 
 
 def record_until_silence(max_seconds: float = 12.0, silence_seconds: float = 1.5, silence_threshold: float = 0.01) -> bytes:
@@ -61,28 +70,28 @@ def record_until_silence(max_seconds: float = 12.0, silence_seconds: float = 1.5
 
 
 def transcribe(wav_bytes: bytes) -> str:
-    """Send recorded audio to OpenAI Whisper and return the transcript text."""
-    buf = io.BytesIO(wav_bytes)
-    buf.name = "speech.wav"
-    result = _client().audio.transcriptions.create(model="whisper-1", file=buf)
-    return result.text.strip()
-
-
-def speak(text: str) -> None:
-    """Synthesize speech with OpenAI TTS and play it back."""
-    if not text:
-        return
-    response = _client().audio.speech.create(
-        model="tts-1",
-        voice=config.OPENAI_TTS_VOICE,
-        input=text,
-        response_format="wav",
-    )
+    """Transcribe recorded audio locally with faster-whisper."""
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-        f.write(response.read())
+        f.write(wav_bytes)
         temp_path = Path(f.name)
 
     try:
-        winsound.PlaySound(str(temp_path), winsound.SND_FILENAME)
+        segments, _ = _get_whisper_model().transcribe(str(temp_path))
+        return " ".join(segment.text.strip() for segment in segments).strip()
+    finally:
+        temp_path.unlink(missing_ok=True)
+
+
+def speak(text: str) -> None:
+    """Synthesize speech with edge-tts (free, no key) and play it back."""
+    if not text:
+        return
+
+    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
+        temp_path = Path(f.name)
+
+    try:
+        asyncio.run(edge_tts.Communicate(text, config.EDGE_TTS_VOICE).save(str(temp_path)))
+        playsound(str(temp_path))
     finally:
         temp_path.unlink(missing_ok=True)

@@ -8,8 +8,9 @@ load_dotenv()
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5")
 
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-OPENAI_TTS_VOICE = os.environ.get("OPENAI_TTS_VOICE", "alloy")
+WHISPER_MODEL_SIZE = os.environ.get("WHISPER_MODEL_SIZE", "base")
+WHISPER_DEVICE = os.environ.get("WHISPER_DEVICE", "cpu")
+EDGE_TTS_VOICE = os.environ.get("EDGE_TTS_VOICE", "en-US-GuyNeural")
 
 VOSK_MODEL_PATH = os.environ.get("VOSK_MODEL_PATH", "./vosk-model-small-en-us-0.15")
 
@@ -25,13 +26,8 @@ WAKE_PHRASES = ["sarmad", "sarmad daddy's home", "sarmad daddy is home"]
 
 
 def require_keys() -> None:
-    missing = []
     if not ANTHROPIC_API_KEY:
-        missing.append("ANTHROPIC_API_KEY")
-    if not OPENAI_API_KEY:
-        missing.append("OPENAI_API_KEY")
-    if missing:
         raise RuntimeError(
-            f"Missing required environment variable(s): {', '.join(missing)}. "
-            "Copy .env.example to .env and fill them in."
+            "Missing required environment variable: ANTHROPIC_API_KEY. "
+            "Copy .env.example to .env and fill it in."
         )
