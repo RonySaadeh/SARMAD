@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+sarmad_memory.db
+apps.json
+/vosk-model*/
+*.wav
+*.mp3
+.venv/
+venv/

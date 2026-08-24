@@ -1,0 +1,6 @@
+anthropic>=0.40.0
+openai>=1.50.0
+vosk>=0.3.45
+sounddevice>=0.4.6
+numpy>=1.26.0
+python-dotenv>=1.0.1
