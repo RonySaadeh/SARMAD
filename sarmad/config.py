@@ -51,7 +51,12 @@ CALENDAR_ICS_URL = os.environ.get("CALENDAR_ICS_URL", "")
 
 MEMORY_DB_PATH = Path(os.environ.get("MEMORY_DB_PATH", "./sarmad_memory.db")).expanduser().resolve()
 
-WAKE_PHRASES = ["sarmad", "sarmad daddy's home", "sarmad daddy is home"]
+# "Sarmad" itself isn't a word the small English Vosk model recognizes (it's
+# always transcribed as [unk]), so matching only requires the part that IS
+# reliably recognized - you still say "Sarmad, Daddy's home" out loud, this
+# just triggers on "daddy...home". Written without an apostrophe since Vosk
+# transcribes speech as "daddy is home", not the contraction.
+WAKE_PHRASES = ["daddy is home", "daddy home"]
 
 
 def require_keys() -> None:
