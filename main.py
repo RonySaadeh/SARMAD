@@ -18,27 +18,33 @@ def run(hud=None) -> None:
             hud.set_state("speaking")
         voice.speak("Yes? What should we do?")
 
-        if hud:
-            hud.set_state("listening")
-        wav_bytes = voice.record_until_silence()
-        user_text = voice.transcribe(wav_bytes)
-
-        if not user_text:
+        # Stay awake for follow-ups after each reply instead of requiring the
+        # wake word again - only fall back to sleep once the user goes quiet.
+        first_turn = True
+        while True:
             if hud:
+                hud.set_state("listening")
+            wav_bytes = voice.record_until_silence()
+            user_text = voice.transcribe(wav_bytes)
+
+            if not user_text:
+                if first_turn:
+                    if hud:
+                        hud.set_state("speaking")
+                    voice.speak("I didn't catch that. Say my name again when you need me.")
+                break
+
+            print(f"You: {user_text}")
+            if hud:
+                hud.set_state("thinking")
+            reply = process(user_text)
+            print(f"SARMAD: {reply}")
+
+            if hud:
+                hud.set_transcript(user_text, reply)
                 hud.set_state("speaking")
-            voice.speak("I didn't catch that. Say my name again when you need me.")
-            continue
-
-        print(f"You: {user_text}")
-        if hud:
-            hud.set_state("thinking")
-        reply = process(user_text)
-        print(f"SARMAD: {reply}")
-
-        if hud:
-            hud.set_transcript(user_text, reply)
-            hud.set_state("speaking")
-        voice.speak(reply)
+            voice.speak(reply)
+            first_turn = False
 
 
 if __name__ == "__main__":
