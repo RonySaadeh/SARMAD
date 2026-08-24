@@ -1,11 +1,12 @@
 """SARMAD's reasoning core: a Claude tool-calling loop over memory + local tools."""
 
 import re
+from datetime import datetime
 
 import anthropic
 
 from sarmad import config, memory
-from sarmad.tools import coding_agent, email_tool, project_scaffold, reservations, system_control, vision
+from sarmad.tools import calendar_tool, coding_agent, email_tool, project_scaffold, reservations, system_control, vision
 
 # Which model handles a request: FAST_MODEL by default for everyday chat, or
 # whichever model the user last explicitly named ("use Opus", "use your
@@ -56,13 +57,22 @@ direct — one to three sentences, almost never more:
 - If you did something with a tool, say what happened in one short sentence,
   not a walkthrough of the steps you took.
 
+The user may speak English, Arabic, or a mix of both in the same sentence.
+Understand whichever they use and reply in the same language(s) they used —
+don't default to English. When you reply in Arabic, use Arabic script (not
+Latin-letter transliteration) so it can be spoken naturally.
+
+Today's date and time: {now}. Use this to resolve relative dates like
+"tomorrow" or "next Friday" into actual dates for tools that need them.
+
 You have real autonomy. For routine, reversible things — scaffolding or fixing
-a project, opening an app, checking email, drafting a reply, looking at
-something with the camera — decide and act instead of asking permission. Only
-ask a short clarifying question when a required detail is genuinely missing
-(which restaurant, what to name a project, which project to fix) or the action
-is hard to reverse and it's unclear the user meant to go all the way (actually
-sending an email, spending money, shutting the machine down).
+a project, opening an app, checking email or your calendar, drafting a reply,
+looking at something with the camera — decide and act instead of asking
+permission. Only ask a short clarifying question when a required detail is
+genuinely missing (which restaurant, what to name a project, which project to
+fix) or the action is hard to reverse and it's unclear the user meant to go
+all the way (actually sending an email, spending money, shutting the machine
+down).
 
 Only call look_at_camera when the user explicitly asks you to look at, check,
 inspect, or see something through the camera — never turn it on unprompted.
@@ -89,7 +99,7 @@ TOOLS = [
     },
     {
         "name": "open_app",
-        "description": "Open an application registered in apps.json by name.",
+        "description": "Open an installed application by name (searches apps.json, then the Start Menu).",
         "input_schema": {
             "type": "object",
             "properties": {"app_name": {"type": "string"}},
@@ -197,6 +207,30 @@ TOOLS = [
         },
     },
     {
+        "name": "check_calendar",
+        "description": "Check upcoming calendar events.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"days_ahead": {"type": "integer", "description": "How many days out to look, default 7"}},
+            "required": [],
+        },
+    },
+    {
+        "name": "add_calendar_event",
+        "description": "Prepare a new calendar event by opening an add-to-calendar dialog for the user to confirm.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string"},
+                "start": {"type": "string", "description": "ISO 8601, e.g. 2026-08-24T15:00"},
+                "end": {"type": "string", "description": "ISO 8601, e.g. 2026-08-24T16:00"},
+                "description": {"type": "string"},
+                "location": {"type": "string"},
+            },
+            "required": ["title", "start", "end"],
+        },
+    },
+    {
         "name": "remember",
         "description": "Save a durable fact or preference about the user for future conversations.",
         "input_schema": {
@@ -220,6 +254,10 @@ _DISPATCH = {
     "fix_project": lambda i: coding_agent.fix_project(i["project_name"], i["instructions"]),
     "check_inbox": lambda i: email_tool.check_inbox(i.get("limit", 5), i.get("unread_only", True)),
     "reply_email": lambda i: email_tool.reply_email(i["to"], i["subject"], i["body"]),
+    "check_calendar": lambda i: calendar_tool.check_calendar(i.get("days_ahead", 7)),
+    "add_calendar_event": lambda i: calendar_tool.add_calendar_event(
+        i["title"], i["start"], i["end"], i.get("description", ""), i.get("location", "")
+    ),
 }
 
 
@@ -246,7 +284,8 @@ def process(user_text: str) -> str:
     model = _resolve_model(user_text)
     facts = memory.all_facts()
     facts.pop("active_model", None)
-    system_prompt = SYSTEM_PROMPT.format(facts=facts or "(none yet)")
+    now = datetime.now().astimezone().strftime("%A, %Y-%m-%d %H:%M %Z")
+    system_prompt = SYSTEM_PROMPT.format(now=now, facts=facts or "(none yet)")
     messages = memory.recent_history(limit=20)
 
     while True:

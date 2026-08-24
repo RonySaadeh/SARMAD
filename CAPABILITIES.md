@@ -7,8 +7,10 @@ vision. Update it whenever a capability is added or a limitation is lifted.
 
 - **Wake it by voice.** Say "SARMAD" or "SARMAD, Daddy's home" near your
   laptop's mic and it starts listening — no touching the keyboard.
-- **Have a spoken conversation.** It transcribes what you say, replies out
-  loud — short and to the point, no preamble — and remembers the conversation
+- **Have a spoken conversation in English, Arabic, or a mix of both.** It
+  transcribes what you say (Whisper auto-detects the language), replies in
+  whichever language(s) you used — with a matching Arabic or English TTS
+  voice — short and to the point, no preamble, and remembers the conversation
   and any facts it's told to remember (`remember: I prefer window seats`)
   across sessions.
 - **Switch models by voice.** Everyday questions run on a fast/cheap model
@@ -28,9 +30,14 @@ vision. Update it whenever a capability is added or a limitation is lifted.
   subject, snippet) over IMAP. Say "reply to X and say Y" and it composes the
   reply — opened as a draft in your mail client by default, or sent directly
   via SMTP if you've set `ENABLE_EMAIL_SEND=true`.
-- **Open apps, URLs, or scripts you've pre-registered.** "Open VS Code" /
-  "open Chrome" works for anything listed in `apps.json`; "run
-  backup.bat" works for anything you've placed in `./scripts`.
+- **Say "check my calendar"** and it reads upcoming events from your
+  calendar's live feed. Say "add a meeting..." and it opens a real
+  add-to-calendar dialog pre-filled for you to confirm. Requires
+  `CALENDAR_ICS_URL` set (off by default — see limitation below).
+- **Open almost any installed app by name.** "Open VS Code" / "open Chrome"
+  searches your Start Menu automatically — no pre-registration needed for
+  most apps. "Run backup.bat" still requires anything you want run to be
+  explicitly placed in `./scripts` first.
 - **Start a restaurant reservation.** "Book a table at [restaurant] for 4 at
   7pm on Friday" opens a pre-filled OpenTable search in your browser — you
   still click to confirm (see limitation below).
@@ -52,9 +59,15 @@ vision. Update it whenever a capability is added or a limitation is lifted.
   method — it gets you one click away, you finish it. True automated booking
   is a deliberately separate, later milestone (browser automation with saved
   credentials).
-- **No calendar, messaging, or general web search.** SARMAD can't check your
-  schedule, use messaging apps, or look things up online yet — it only acts
-  through the specific tools listed above (email is now covered, see "You can").
+- **No messaging apps or general web search.** SARMAD can't use messaging
+  apps or look things up online yet — it only acts through the specific tools
+  listed above (calendar and email are now covered, see "You can").
+- **Calendar is read-only plus a draft-and-confirm add, not real write
+  access.** `add_calendar_event` opens your calendar app's own add-event
+  dialog rather than writing the event itself — most providers require a full
+  OAuth flow for that, which is a later milestone. Only one calendar feed is
+  supported (`CALENDAR_ICS_URL`), and recurring events may only show their
+  first/original occurrence, not each future one.
 - **`fix_project` trusts the model with a real shell, scoped only by working
   directory.** It's off by default. Once enabled, a command it runs isn't
   sandboxed against absolute paths — the trust boundary is the model itself,
@@ -62,10 +75,14 @@ vision. Update it whenever a capability is added or a limitation is lifted.
 - **Email autonomy is opt-in.** By default SARMAD only drafts replies for you
   to review and send; enabling `ENABLE_EMAIL_SEND` means a misheard word could
   send something you didn't intend, with no confirmation step.
-- **No arbitrary system control.** It can only open apps/scripts you've
-  explicitly whitelisted — it will refuse to open or run anything not listed
-  in `apps.json` / `./scripts`, and refuses power actions unless you opt in.
-  This is intentional, not a bug to work around.
+- **Scripts and power actions stay whitelist/opt-in even though apps don't.**
+  `open_app` will find almost anything installed, but `run_script` still
+  refuses anything not explicitly placed in `./scripts`, and power actions
+  (shutdown/restart/sleep/lock) refuse unless you've opted in. This is
+  intentional, not a bug to work around.
+- **App matching is fuzzy.** If the exact name isn't found, `open_app` opens
+  its closest Start Menu match — for an ambiguous or unusual name it could
+  occasionally open the wrong app.
 - **Windows + one machine only.** It's built for a single Windows laptop with
   a local mic/speakers; there's no phone app, no remote access, and no
   multi-device sync.
@@ -74,9 +91,16 @@ vision. Update it whenever a capability is added or a limitation is lifted.
   set up Task Scheduler to relaunch it — there's no watchdog yet.
 - **No barge-in.** You can't interrupt it mid-sentence by talking over it —
   it finishes speaking, then listens again.
-- **Wake word is basic.** It's a small offline model tuned to a short
-  vocabulary; expect occasional false triggers or misses, especially in a
-  noisy room or with background music/TV.
+- **Wake word is basic, and English-only.** It's a small offline model tuned
+  to a short vocabulary; expect occasional false triggers or misses,
+  especially in a noisy room or with background music/TV. You still have to
+  say "SARMAD" itself in English pronunciation — only what you say *after*
+  waking it understands Arabic and English.
+- **The Arabic/English voice switch is script-based, not a real language
+  detector.** It picks the Arabic voice when a reply contains Arabic-script
+  characters. Arabizi (Arabic written in Latin letters) will be read with the
+  English voice and likely mispronounced — the system prompt asks Claude to
+  reply in Arabic script rather than Arabizi specifically to avoid this.
 - **Single user, no permissions model.** Anyone within earshot who says the
   wake phrase can issue commands — there's no voice ID or PIN.
 - **Local STT is slower than cloud.** Using `faster-whisper` locally (chosen
@@ -94,7 +118,8 @@ vision. Update it whenever a capability is added or a limitation is lifted.
 
 ## Where this is going
 
-See the "What's next" section in `README.md` for the current shortlist
-(calendar, a persistent background service, real reservation automation).
-Capabilities move from "cannot yet" to "you can" here as they ship — this
-file should always describe the current `main` branch, not the plan.
+See the "What's next" section in `README.md` for the current shortlist (real
+calendar write access, recurring-event support, a persistent background
+service, real reservation automation). Capabilities move from "cannot yet" to
+"you can" here as they ship — this file should always describe the current
+`main` branch, not the plan.

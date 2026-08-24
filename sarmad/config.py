@@ -16,7 +16,11 @@ SMART_MODEL = os.environ.get("SMART_MODEL", "claude-opus-5")
 
 WHISPER_MODEL_SIZE = os.environ.get("WHISPER_MODEL_SIZE", "base")
 WHISPER_DEVICE = os.environ.get("WHISPER_DEVICE", "cpu")
+# faster-whisper auto-detects the spoken language per request (English, Arabic,
+# or a mix), so no separate language switch is needed for speech-to-text.
 EDGE_TTS_VOICE = os.environ.get("EDGE_TTS_VOICE", "en-US-GuyNeural")
+# Used instead of EDGE_TTS_VOICE when a reply contains Arabic script.
+ARABIC_TTS_VOICE = os.environ.get("ARABIC_TTS_VOICE", "ar-SA-HamedNeural")
 
 VOSK_MODEL_PATH = os.environ.get("VOSK_MODEL_PATH", "./vosk-model-small-en-us-0.15")
 
@@ -39,6 +43,11 @@ SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
 ENABLE_EMAIL_SEND = os.environ.get("ENABLE_EMAIL_SEND", "false").strip().lower() == "true"
 
 ENABLE_CODING_AGENT = os.environ.get("ENABLE_CODING_AGENT", "false").strip().lower() == "true"
+
+# A calendar's private ICS feed URL (read-only). For Google Calendar: Settings
+# > [your calendar] > "Secret address in iCal format". Works the same way for
+# any calendar that publishes an ICS feed (Outlook, iCloud, etc).
+CALENDAR_ICS_URL = os.environ.get("CALENDAR_ICS_URL", "")
 
 MEMORY_DB_PATH = Path(os.environ.get("MEMORY_DB_PATH", "./sarmad_memory.db")).expanduser().resolve()
 

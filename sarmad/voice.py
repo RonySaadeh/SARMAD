@@ -7,6 +7,7 @@ API key required either) plus `playsound` since edge-tts outputs mp3.
 
 import asyncio
 import io
+import re
 import tempfile
 import wave
 from pathlib import Path
@@ -21,6 +22,8 @@ from sarmad import config
 
 SAMPLE_RATE = 16000
 CHANNELS = 1
+
+_ARABIC_SCRIPT = re.compile(r"[؀-ۿ]")
 
 _whisper_model: WhisperModel | None = None
 
@@ -83,15 +86,21 @@ def transcribe(wav_bytes: bytes) -> str:
 
 
 def speak(text: str) -> None:
-    """Synthesize speech with edge-tts (free, no key) and play it back."""
+    """Synthesize speech with edge-tts (free, no key) and play it back.
+
+    Picks an Arabic voice automatically when the reply contains Arabic
+    script, so bilingual conversations sound right in either language.
+    """
     if not text:
         return
+
+    voice = config.ARABIC_TTS_VOICE if _ARABIC_SCRIPT.search(text) else config.EDGE_TTS_VOICE
 
     with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
         temp_path = Path(f.name)
 
     try:
-        asyncio.run(edge_tts.Communicate(text, config.EDGE_TTS_VOICE).save(str(temp_path)))
+        asyncio.run(edge_tts.Communicate(text, voice).save(str(temp_path)))
         playsound(str(temp_path))
     finally:
         temp_path.unlink(missing_ok=True)
