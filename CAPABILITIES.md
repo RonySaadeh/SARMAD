@@ -13,6 +13,9 @@ Living snapshot of `main` — update this whenever a capability changes.
 | "Fix X in [project]" | Edits/fixes an existing project via the Claude Code CLI | `ENABLE_CODING_AGENT=true`, `claude` CLI installed |
 | "Check my email" / "reply to X" | Reads inbox; drafts or sends a reply | `EMAIL_ADDRESS` + `EMAIL_APP_PASSWORD` |
 | "Check my calendar" / "add a meeting" | Reads upcoming events; drafts new ones | `CALENDAR_ICS_URL` |
+| "Search for X" / "what's the best..." | Live web search — research, products, prices, news | — |
+| "Find/play a video/song" / "open X" | Searches, then opens the result (YouTube, a product page, etc.) | — |
+| "Message X on WhatsApp: ..." | Opens WhatsApp with the message pre-filled to send | Logged into WhatsApp Web/Desktop |
 | "Open Chrome" / "open [app]" | Opens almost any installed app | — |
 | "Book a table at X" | Opens a pre-filled OpenTable search | — |
 | "Look at this" | Inspects one webcam frame | — |
@@ -31,7 +34,10 @@ exchange as captions.
   sandboxed against absolute paths; trust it like any coding agent.
 - **Email auto-send** — off by default; once on, no confirmation step.
 - **Apps** — fuzzy-matched by name, could occasionally open the wrong one.
-- **No messaging apps, no general web search.**
+- **WhatsApp only, and drafts rather than sends** — you still hit send;
+  other messaging apps aren't wired up yet.
+- **"Play music" opens search results, doesn't queue playback** — you still
+  click play; no Spotify/YouTube account integration yet.
 - **Windows + one laptop only** — no phone app, no sync.
 - **Not always-on** — needs the process running (Task Scheduler helps).
 - **No barge-in** — can't interrupt it mid-sentence.

@@ -6,7 +6,16 @@ from datetime import datetime
 import anthropic
 
 from sarmad import config, memory
-from sarmad.tools import calendar_tool, coding_agent, email_tool, project_scaffold, reservations, system_control, vision
+from sarmad.tools import (
+    calendar_tool,
+    coding_agent,
+    email_tool,
+    messaging,
+    project_scaffold,
+    reservations,
+    system_control,
+    vision,
+)
 
 # Which model handles a request: FAST_MODEL by default for everyday chat, or
 # whichever model the user last explicitly named ("use Opus", "use your
@@ -74,11 +83,19 @@ fix) or the action is hard to reverse and it's unclear the user meant to go
 all the way (actually sending an email, spending money, shutting the machine
 down).
 
+You have live web search. Use it for anything you don't already know for
+sure: current info, product research/comparisons, prices, news, "what is"
+questions beyond your training. When the user wants to actually watch, play,
+buy, or open something (a video, a song, a product page), search first to
+find the right link, then call open_url to actually open it — don't just
+describe what you found.
+
 Only call look_at_camera when the user explicitly asks you to look at, check,
 inspect, or see something through the camera — never turn it on unprompted.
 
-Only call reply_email when the user has actually asked you to reply or send
-something — never send or draft a message unprompted.
+Only call reply_email or send_whatsapp_message when the user has actually
+asked you to reply, message, or send something to someone — never send or
+draft a message unprompted.
 
 Known facts about your user (from memory):
 {facts}
@@ -108,7 +125,10 @@ TOOLS = [
     },
     {
         "name": "open_url",
-        "description": "Open a URL in the default web browser.",
+        "description": (
+            "Open a URL in the default web browser — e.g. a video, a song, a product page, "
+            "or search results you found via web_search."
+        ),
         "input_schema": {
             "type": "object",
             "properties": {"url": {"type": "string"}},
@@ -231,6 +251,21 @@ TOOLS = [
         },
     },
     {
+        "name": "send_whatsapp_message",
+        "description": (
+            "Prepare a WhatsApp message to a phone number by opening it pre-filled for the user "
+            "to send. Only call this when the user has explicitly asked you to message someone."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "phone": {"type": "string", "description": "Phone number, with country code"},
+                "message": {"type": "string"},
+            },
+            "required": ["phone", "message"],
+        },
+    },
+    {
         "name": "remember",
         "description": "Save a durable fact or preference about the user for future conversations.",
         "input_schema": {
@@ -239,6 +274,7 @@ TOOLS = [
             "required": ["key", "value"],
         },
     },
+    {"type": "web_search_20250305", "name": "web_search", "max_uses": 3},
 ]
 
 _DISPATCH = {
@@ -258,6 +294,7 @@ _DISPATCH = {
     "add_calendar_event": lambda i: calendar_tool.add_calendar_event(
         i["title"], i["start"], i["end"], i.get("description", ""), i.get("location", "")
     ),
+    "send_whatsapp_message": lambda i: messaging.send_whatsapp_message(i["phone"], i["message"]),
 }
 
 

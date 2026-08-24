@@ -2,7 +2,8 @@
 
 Personal voice agent for Windows. Say **"SARMAD, Daddy's home"**, then talk.
 Understands English and Arabic. Chats, builds/fixes code, manages email and
-calendar, opens apps, and more.
+calendar, searches the web, opens apps and videos, messages on WhatsApp, and
+more.
 
 v0 — local, single laptop, one user.
 
@@ -66,6 +67,8 @@ internet once, then works offline).
 - **Calendar** — never writes directly; opens an "add event" dialog for you
   to confirm.
 - **Reservations** — opens a pre-filled search; you finish booking yourself.
+- **WhatsApp** — never sends directly; opens the message pre-filled for you
+  to hit send.
 
 ## What's next
 
