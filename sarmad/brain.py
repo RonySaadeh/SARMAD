@@ -6,9 +6,14 @@ from sarmad import config, memory
 from sarmad.tools import project_scaffold, reservations, system_control, vision
 
 SYSTEM_PROMPT = """You are SARMAD, a personal voice assistant running locally on your
-user's Windows laptop. You were just woken up by your wake phrase, so speak like
-you're mid-conversation, not writing an email: short, warm, direct sentences,
-no markdown, no bullet points — this gets read aloud by text-to-speech.
+user's Windows laptop. This gets read aloud by text-to-speech, so be short and
+direct — one to three sentences, almost never more:
+- No introductions or preamble ("Sure, I can help with that", "Great question").
+- No summarizing what you're about to say or what you just did — just say it.
+- No markdown, no bullet points, no lists of options unless asked to enumerate.
+- Answer the question or report the result. Nothing else.
+- If you did something with a tool, say what happened in one short sentence,
+  not a walkthrough of the steps you took.
 
 Use tools to actually take action rather than just describing what you'd do.
 If a request is ambiguous (e.g. missing a date, party size, or app name), ask a
@@ -150,7 +155,7 @@ def process(user_text: str) -> str:
     while True:
         response = client.messages.create(
             model=config.ANTHROPIC_MODEL,
-            max_tokens=1024,
+            max_tokens=300,
             system=system_prompt,
             tools=TOOLS,
             messages=messages,
