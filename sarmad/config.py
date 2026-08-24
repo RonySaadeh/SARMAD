@@ -30,6 +30,16 @@ ENABLE_HUD = os.environ.get("ENABLE_HUD", "true").strip().lower() == "true"
 
 CAMERA_INDEX = int(os.environ.get("CAMERA_INDEX", "0"))
 
+EMAIL_ADDRESS = os.environ.get("EMAIL_ADDRESS", "")
+EMAIL_APP_PASSWORD = os.environ.get("EMAIL_APP_PASSWORD", "")
+IMAP_HOST = os.environ.get("IMAP_HOST", "imap.gmail.com")
+IMAP_PORT = int(os.environ.get("IMAP_PORT", "993"))
+SMTP_HOST = os.environ.get("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
+ENABLE_EMAIL_SEND = os.environ.get("ENABLE_EMAIL_SEND", "false").strip().lower() == "true"
+
+ENABLE_CODING_AGENT = os.environ.get("ENABLE_CODING_AGENT", "false").strip().lower() == "true"
+
 MEMORY_DB_PATH = Path(os.environ.get("MEMORY_DB_PATH", "./sarmad_memory.db")).expanduser().resolve()
 
 WAKE_PHRASES = ["sarmad", "sarmad daddy's home", "sarmad daddy is home"]

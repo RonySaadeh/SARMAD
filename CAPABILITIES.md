@@ -19,6 +19,15 @@ vision. Update it whenever a capability is added or a limitation is lifted.
 - **Say "create a project for X"** and get a real scaffolded folder on disk
   (files + `git init`) under your configured `Projects/` folder — SARMAD picks
   a reasonable stack and writes starter code from your description.
+- **Say "fix X in [project]"** and it delegates to the actual Claude Code CLI,
+  scoped to that project's folder, to read/edit files and run commands until
+  it's done — real fixes, not just scaffolding. Requires `claude` installed
+  and logged in on this machine, and `ENABLE_CODING_AGENT=true` (off by
+  default — see limitation below).
+- **Say "check my email"** and it reads recent inbox messages (sender,
+  subject, snippet) over IMAP. Say "reply to X and say Y" and it composes the
+  reply — opened as a draft in your mail client by default, or sent directly
+  via SMTP if you've set `ENABLE_EMAIL_SEND=true`.
 - **Open apps, URLs, or scripts you've pre-registered.** "Open VS Code" /
   "open Chrome" works for anything listed in `apps.json`; "run
   backup.bat" works for anything you've placed in `./scripts`.
@@ -43,9 +52,16 @@ vision. Update it whenever a capability is added or a limitation is lifted.
   method — it gets you one click away, you finish it. True automated booking
   is a deliberately separate, later milestone (browser automation with saved
   credentials).
-- **No calendar, email, messaging, or web search.** SARMAD can't check your
-  schedule, read/send email, or look things up online yet — it only acts
-  through the specific tools listed above.
+- **No calendar, messaging, or general web search.** SARMAD can't check your
+  schedule, use messaging apps, or look things up online yet — it only acts
+  through the specific tools listed above (email is now covered, see "You can").
+- **`fix_project` trusts the model with a real shell, scoped only by working
+  directory.** It's off by default. Once enabled, a command it runs isn't
+  sandboxed against absolute paths — the trust boundary is the model itself,
+  same as running any coding agent yourself, not an OS-level sandbox.
+- **Email autonomy is opt-in.** By default SARMAD only drafts replies for you
+  to review and send; enabling `ENABLE_EMAIL_SEND` means a misheard word could
+  send something you didn't intend, with no confirmation step.
 - **No arbitrary system control.** It can only open apps/scripts you've
   explicitly whitelisted — it will refuse to open or run anything not listed
   in `apps.json` / `./scripts`, and refuses power actions unless you opt in.
@@ -79,7 +95,6 @@ vision. Update it whenever a capability is added or a limitation is lifted.
 ## Where this is going
 
 See the "What's next" section in `README.md` for the current shortlist
-(calendar, email, a persistent background service, real reservation
-automation). Capabilities move from "cannot yet" to "you can" here as they
-ship — this file should always describe the current `main` branch, not the
-plan.
+(calendar, a persistent background service, real reservation automation).
+Capabilities move from "cannot yet" to "you can" here as they ship — this
+file should always describe the current `main` branch, not the plan.

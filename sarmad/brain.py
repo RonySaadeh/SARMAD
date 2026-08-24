@@ -5,7 +5,7 @@ import re
 import anthropic
 
 from sarmad import config, memory
-from sarmad.tools import project_scaffold, reservations, system_control, vision
+from sarmad.tools import coding_agent, email_tool, project_scaffold, reservations, system_control, vision
 
 # Which model handles a request: FAST_MODEL by default for everyday chat, or
 # whichever model the user last explicitly named ("use Opus", "use your
@@ -56,12 +56,19 @@ direct — one to three sentences, almost never more:
 - If you did something with a tool, say what happened in one short sentence,
   not a walkthrough of the steps you took.
 
-Use tools to actually take action rather than just describing what you'd do.
-If a request is ambiguous (e.g. missing a date, party size, or app name), ask a
-short clarifying question instead of guessing.
+You have real autonomy. For routine, reversible things — scaffolding or fixing
+a project, opening an app, checking email, drafting a reply, looking at
+something with the camera — decide and act instead of asking permission. Only
+ask a short clarifying question when a required detail is genuinely missing
+(which restaurant, what to name a project, which project to fix) or the action
+is hard to reverse and it's unclear the user meant to go all the way (actually
+sending an email, spending money, shutting the machine down).
 
 Only call look_at_camera when the user explicitly asks you to look at, check,
 inspect, or see something through the camera — never turn it on unprompted.
+
+Only call reply_email when the user has actually asked you to reply or send
+something — never send or draft a message unprompted.
 
 Known facts about your user (from memory):
 {facts}
@@ -147,6 +154,49 @@ TOOLS = [
         },
     },
     {
+        "name": "fix_project",
+        "description": (
+            "Fix a bug or implement a change in an existing project SARMAD created, by delegating "
+            "to the Claude Code CLI scoped to that project's folder. Can take several minutes."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "project_name": {"type": "string", "description": "The project's folder name under Projects/"},
+                "instructions": {"type": "string", "description": "What to fix, add, or change"},
+            },
+            "required": ["project_name", "instructions"],
+        },
+    },
+    {
+        "name": "check_inbox",
+        "description": "Check recent email (unread by default) and return sender, subject, and a snippet for each.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "limit": {"type": "integer", "description": "Max emails to return, default 5"},
+                "unread_only": {"type": "boolean", "description": "Default true"},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "reply_email",
+        "description": (
+            "Reply to or compose an email. Only call this when the user has explicitly asked you "
+            "to reply to or send something."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "to": {"type": "string"},
+                "subject": {"type": "string"},
+                "body": {"type": "string"},
+            },
+            "required": ["to", "subject", "body"],
+        },
+    },
+    {
         "name": "remember",
         "description": "Save a durable fact or preference about the user for future conversations.",
         "input_schema": {
@@ -167,6 +217,9 @@ _DISPATCH = {
         i["restaurant"], i["party_size"], i["date"], i["time"], i.get("city", "")
     ),
     "look_at_camera": lambda i: vision.capture_and_look(),
+    "fix_project": lambda i: coding_agent.fix_project(i["project_name"], i["instructions"]),
+    "check_inbox": lambda i: email_tool.check_inbox(i.get("limit", 5), i.get("unread_only", True)),
+    "reply_email": lambda i: email_tool.reply_email(i["to"], i["subject"], i["body"]),
 }
 
 

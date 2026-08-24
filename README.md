@@ -2,7 +2,10 @@
 
 A personal voice agent that lives on your Windows laptop. Say its wake phrase,
 it listens, thinks with Claude, and talks back — and can actually act for you:
-scaffold new coding projects, open apps, and start restaurant reservations.
+build and fix real coding projects, check and reply to email, open apps, and
+start restaurant reservations. It's built to decide and act on routine things
+rather than just describe what it would do — see "You have real autonomy" in
+`sarmad/brain.py`'s system prompt.
 
 This is **v0**: local-only, one user, running in a terminal (or as a background
 process at login). It's the first step toward a fuller "handles my daily life"
@@ -30,6 +33,14 @@ and its current limitations.**
 4. **Act** (`sarmad/tools/`) — Claude can:
    - `create_project` — scaffold a new project folder (files + `git init`) from
      a spoken description, under `PROJECTS_DIR`.
+   - `fix_project` — fix a bug or add something to a project SARMAD already
+     created, by delegating to the **Claude Code CLI** itself (`claude`)
+     scoped to that project's folder — real file editing and command
+     execution, not a smaller reimplementation. Off by default — see
+     **Safety** below.
+   - `check_inbox` / `reply_email` — read recent email over IMAP and reply.
+     Replying opens a pre-filled draft in your mail client by default; see
+     **Safety** below for the fully-automated option.
    - `open_app` / `open_url` / `run_script` — open whitelisted apps, URLs, or
      scripts (nothing arbitrary — see **Safety** below).
    - `draft_reservation` — open a pre-filled OpenTable search for a restaurant
@@ -67,12 +78,22 @@ text-to-speech are both free and local/no-key.
    the unzipped folder.
 4. **Apps SARMAD is allowed to open**: copy `apps.json.example` to `apps.json`
    and edit the paths for apps installed on your machine.
-5. **HUD window**: the visual HUD uses the Microsoft Edge WebView2 runtime,
+5. **Fixing/extending projects** (optional): install the
+   [Claude Code CLI](https://docs.claude.com/en/docs/claude-code) on this
+   machine and run `claude login` (this is a separate login from any other
+   Claude Code session you use elsewhere — including for GitHub access, if
+   you want `fix_project` able to push/open PRs). Then set
+   `ENABLE_CODING_AGENT=true` in `.env`.
+6. **Email** (optional): set `EMAIL_ADDRESS` and `EMAIL_APP_PASSWORD` in
+   `.env` (an app password, not your real password — see the comments in
+   `.env.example` for Gmail/Outlook/Yahoo specifics) to enable `check_inbox`
+   and `reply_email`.
+7. **HUD window**: the visual HUD uses the Microsoft Edge WebView2 runtime,
    which ships pre-installed on current Windows 10/11 — nothing to install in
    most cases. If the HUD window fails to open, install it from
    https://developer.microsoft.com/microsoft-edge/webview2, or set
    `ENABLE_HUD=false` in `.env` to run terminal-only.
-6. **Run it**: (the first run downloads the local whisper model from Hugging
+8. **Run it**: (the first run downloads the local whisper model from Hugging
    Face automatically — needs internet once, then it's cached and works
    offline)
    ```
@@ -96,6 +117,18 @@ text-to-speech are both free and local/no-key.
   `./scripts` — it cannot run arbitrary commands you didn't register.
 - Shutdown/restart/sleep/lock are **off by default**. Set
   `ENABLE_POWER_ACTIONS=true` in `.env` to allow them.
+- `fix_project` is **off by default** (`ENABLE_CODING_AGENT=false`) because it
+  runs the Claude Code CLI with permission prompts bypassed so it can work
+  unattended. It's scoped to one project's folder via its working directory,
+  but a shell command it runs isn't sandboxed against absolute paths — the
+  trust boundary here is the model, the same as running any coding agent
+  yourself. Turn it on once you're comfortable with that.
+- Emailing defaults to **drafting, not sending**: `reply_email` opens a
+  pre-filled draft in your mail client and you hit send. Set
+  `ENABLE_EMAIL_SEND=true` in `.env` to let SARMAD send via SMTP directly with
+  no confirmation step — the system prompt restricts it to cases where you
+  explicitly asked for a reply/send, but a misheard transcription could still
+  send something you didn't mean, so only enable this once you trust it.
 - Reservations aren't fully automated yet: SARMAD opens a pre-filled OpenTable
   search rather than logging in and paying on your behalf — that needs
   credential handling and is a deliberately separate, later milestone.
@@ -109,6 +142,6 @@ text-to-speech are both free and local/no-key.
 
 ## What's next
 
-Natural candidates for v1: calendar read/write, email drafting, a persistent
-background service (instead of a visible terminal window), and real
-reservation automation via browser automation with your saved logins.
+Natural candidates for v1: calendar read/write, a persistent background
+service (instead of a visible terminal window), and real reservation
+automation via browser automation with your saved logins.
