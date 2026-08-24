@@ -1,125 +1,51 @@
-# What SARMAD can do right now (v0)
+# What SARMAD Can Do (v0)
 
-This is a living snapshot of what actually works today, not the long-term
-vision. Update it whenever a capability is added or a limitation is lifted.
+Living snapshot of `main` — update this whenever a capability changes.
 
-## You can
+## Capabilities
 
-- **Wake it by voice.** Say "SARMAD" or "SARMAD, Daddy's home" near your
-  laptop's mic and it starts listening — no touching the keyboard.
-- **Have a spoken conversation in English, Arabic, or a mix of both.** It
-  transcribes what you say (Whisper auto-detects the language), replies in
-  whichever language(s) you used — with a matching Arabic or English TTS
-  voice — short and to the point, no preamble, and remembers the conversation
-  and any facts it's told to remember (`remember: I prefer window seats`)
-  across sessions.
-- **Switch models by voice.** Everyday questions run on a fast/cheap model
-  automatically. Say "use Opus" or "use your smartest model" before (or as
-  part of) a hard request and it switches for real reasoning work; say "use
-  your fast model" or "go back to normal" to switch back. It stays on
-  whichever you last picked until you change it again.
-- **Say "create a project for X"** and get a real scaffolded folder on disk
-  (files + `git init`) under your configured `Projects/` folder — SARMAD picks
-  a reasonable stack and writes starter code from your description.
-- **Say "fix X in [project]"** and it delegates to the actual Claude Code CLI,
-  scoped to that project's folder, to read/edit files and run commands until
-  it's done — real fixes, not just scaffolding. Requires `claude` installed
-  and logged in on this machine, and `ENABLE_CODING_AGENT=true` (off by
-  default — see limitation below).
-- **Say "check my email"** and it reads recent inbox messages (sender,
-  subject, snippet) over IMAP. Say "reply to X and say Y" and it composes the
-  reply — opened as a draft in your mail client by default, or sent directly
-  via SMTP if you've set `ENABLE_EMAIL_SEND=true`.
-- **Say "check my calendar"** and it reads upcoming events from your
-  calendar's live feed. Say "add a meeting..." and it opens a real
-  add-to-calendar dialog pre-filled for you to confirm. Requires
-  `CALENDAR_ICS_URL` set (off by default — see limitation below).
-- **Open almost any installed app by name.** "Open VS Code" / "open Chrome"
-  searches your Start Menu automatically — no pre-registration needed for
-  most apps. "Run backup.bat" still requires anything you want run to be
-  explicitly placed in `./scripts` first.
-- **Start a restaurant reservation.** "Book a table at [restaurant] for 4 at
-  7pm on Friday" opens a pre-filled OpenTable search in your browser — you
-  still click to confirm (see limitation below).
-- **See what it's doing.** A small always-on-top HUD window shows a glowing
-  status core (idle / listening / thinking / speaking) plus the last thing
-  you said and its reply, as captions.
-- **Ask it to look at something through your webcam.** "SARMAD, look at this
-  and tell me if the wiring is right" — it captures one frame and inspects it
-  with Claude's vision. Only fires when you explicitly ask (see limitation
-  below), and the frame is never saved to disk.
-- **Optionally, shut down / restart / sleep / lock your laptop by voice** —
-  but only if you've explicitly set `ENABLE_POWER_ACTIONS=true` in `.env`
-  (off by default).
+| Say | What happens | Needs |
+|---|---|---|
+| "SARMAD, Daddy's home" | Wakes it up | — |
+| Just talk | Chat, remembers what you tell it to remember | — |
+| "Use Opus" / "use your fast model" | Switch model for hard vs. simple tasks | — |
+| "Create a project for X" | Scaffolds a new project folder + `git init` | — |
+| "Fix X in [project]" | Edits/fixes an existing project via the Claude Code CLI | `ENABLE_CODING_AGENT=true`, `claude` CLI installed |
+| "Check my email" / "reply to X" | Reads inbox; drafts or sends a reply | `EMAIL_ADDRESS` + `EMAIL_APP_PASSWORD` |
+| "Check my calendar" / "add a meeting" | Reads upcoming events; drafts new ones | `CALENDAR_ICS_URL` |
+| "Open Chrome" / "open [app]" | Opens almost any installed app | — |
+| "Book a table at X" | Opens a pre-filled OpenTable search | — |
+| "Look at this" | Inspects one webcam frame | — |
+| "Shut down" / "lock" / etc. | Power actions | `ENABLE_POWER_ACTIONS=true` |
+| Speak Arabic or English | Understood and answered in kind | — |
 
-## You cannot yet
+A small HUD window shows idle/listening/thinking/speaking and the last
+exchange as captions.
 
-- **It doesn't actually book the reservation.** No restaurant has a public
-  booking API and SARMAD doesn't have your OpenTable login or a payment
-  method — it gets you one click away, you finish it. True automated booking
-  is a deliberately separate, later milestone (browser automation with saved
-  credentials).
-- **No messaging apps or general web search.** SARMAD can't use messaging
-  apps or look things up online yet — it only acts through the specific tools
-  listed above (calendar and email are now covered, see "You can").
-- **Calendar is read-only plus a draft-and-confirm add, not real write
-  access.** `add_calendar_event` opens your calendar app's own add-event
-  dialog rather than writing the event itself — most providers require a full
-  OAuth flow for that, which is a later milestone. Only one calendar feed is
-  supported (`CALENDAR_ICS_URL`), and recurring events may only show their
-  first/original occurrence, not each future one.
-- **`fix_project` trusts the model with a real shell, scoped only by working
-  directory.** It's off by default. Once enabled, a command it runs isn't
-  sandboxed against absolute paths — the trust boundary is the model itself,
-  same as running any coding agent yourself, not an OS-level sandbox.
-- **Email autonomy is opt-in.** By default SARMAD only drafts replies for you
-  to review and send; enabling `ENABLE_EMAIL_SEND` means a misheard word could
-  send something you didn't intend, with no confirmation step.
-- **Scripts and power actions stay whitelist/opt-in even though apps don't.**
-  `open_app` will find almost anything installed, but `run_script` still
-  refuses anything not explicitly placed in `./scripts`, and power actions
-  (shutdown/restart/sleep/lock) refuse unless you've opted in. This is
-  intentional, not a bug to work around.
-- **App matching is fuzzy.** If the exact name isn't found, `open_app` opens
-  its closest Start Menu match — for an ambiguous or unusual name it could
-  occasionally open the wrong app.
-- **Windows + one machine only.** It's built for a single Windows laptop with
-  a local mic/speakers; there's no phone app, no remote access, and no
-  multi-device sync.
-- **Not truly "always on."** SARMAD only runs while the terminal process /
-  background task is alive. It restarts if the process crashes only if you've
-  set up Task Scheduler to relaunch it — there's no watchdog yet.
-- **No barge-in.** You can't interrupt it mid-sentence by talking over it —
-  it finishes speaking, then listens again.
-- **Wake word is basic, and English-only.** It's a small offline model tuned
-  to a short vocabulary; expect occasional false triggers or misses,
-  especially in a noisy room or with background music/TV. You still have to
-  say "SARMAD" itself in English pronunciation — only what you say *after*
-  waking it understands Arabic and English.
-- **The Arabic/English voice switch is script-based, not a real language
-  detector.** It picks the Arabic voice when a reply contains Arabic-script
-  characters. Arabizi (Arabic written in Latin letters) will be read with the
-  English voice and likely mispronounced — the system prompt asks Claude to
-  reply in Arabic script rather than Arabizi specifically to avoid this.
-- **Single user, no permissions model.** Anyone within earshot who says the
-  wake phrase can issue commands — there's no voice ID or PIN.
-- **Local STT is slower than cloud.** Using `faster-whisper` locally (chosen
-  to avoid needing an OpenAI key) adds a few seconds of latency per request,
-  more on an older/weaker CPU.
-- **Model switching is keyword-based, not automatic.** SARMAD doesn't judge
-  whether a task is actually hard — it only switches models when you say a
-  recognized phrase ("use Opus", "use your smartest model", etc.). It won't
-  notice on its own that a question deserved the smarter model.
-- **Camera is a single still frame, not live video.** It can't watch
-  continuously or track motion — each "look at this" captures one snapshot.
-  The image is sent to Anthropic's API as part of that request (like any
-  Claude vision use), and there's no on-screen indicator besides the HUD
-  showing "thinking" — so treat the wake phrase itself as the on/off switch.
+## Limits
 
-## Where this is going
+- **Reservations** — opens a search, doesn't book (no login/payment).
+- **Calendar** — read + "confirm to add," not real write access; one calendar
+  only; recurring events may not expand.
+- **Coding agent** — real shell access inside the project folder, not
+  sandboxed against absolute paths; trust it like any coding agent.
+- **Email auto-send** — off by default; once on, no confirmation step.
+- **Apps** — fuzzy-matched by name, could occasionally open the wrong one.
+- **No messaging apps, no general web search.**
+- **Windows + one laptop only** — no phone app, no sync.
+- **Not always-on** — needs the process running (Task Scheduler helps).
+- **No barge-in** — can't interrupt it mid-sentence.
+- **Wake word is English-only** ("SARMAD" itself); the conversation after
+  that is bilingual.
+- **Arabic voice is picked by script, not real language detection** —
+  Arabizi (Arabic in Latin letters) gets mispronounced.
+- **Single user, no voice ID** — anyone in earshot can give commands.
+- **Local speech-to-text** is a few seconds slower than cloud.
+- **Model switching is manual** — SARMAD won't upgrade itself for a hard
+  question unless you say so.
+- **Camera is one still frame per request**, not continuous video.
 
-See the "What's next" section in `README.md` for the current shortlist (real
-calendar write access, recurring-event support, a persistent background
-service, real reservation automation). Capabilities move from "cannot yet" to
-"you can" here as they ship — this file should always describe the current
-`main` branch, not the plan.
+## Next
+
+Real calendar write access, recurring events, a background service, real
+reservation booking.
