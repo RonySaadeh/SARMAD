@@ -36,7 +36,7 @@ def _get_whisper_model() -> WhisperModel:
     return _whisper_model
 
 
-def record_until_silence(max_seconds: float = 25.0, silence_seconds: float = 1.5, silence_threshold: float = 0.01) -> bytes:
+def record_until_silence(max_seconds: float = 25.0, silence_seconds: float = 0.9, silence_threshold: float = 0.01) -> bytes:
     """Record from the default microphone until the user stops talking, and return WAV bytes."""
     block_seconds = 0.25
     block_frames = int(SAMPLE_RATE * block_seconds)
