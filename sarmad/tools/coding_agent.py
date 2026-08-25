@@ -14,6 +14,8 @@ keyboard.
 """
 
 import subprocess
+import time
+from pathlib import Path
 
 from sarmad import config
 
@@ -33,23 +35,52 @@ def fix_project(project_name: str, instructions: str) -> dict:
     if not project_dir.is_dir():
         return {"ok": False, "error": f"No project folder named '{project_name}' under {config.PROJECTS_DIR}."}
 
+    print(f"\n----- Claude Code working in {project_dir.name} -----")
     try:
-        proc = subprocess.run(
+        proc = subprocess.Popen(
             ["claude", "-p", instructions, "--permission-mode", "bypassPermissions"],
             cwd=project_dir,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
-            timeout=_TIMEOUT_SECONDS,
+            bufsize=1,
         )
     except FileNotFoundError:
         return {
             "ok": False,
             "error": "The `claude` CLI isn't installed or on PATH. Install Claude Code and run `claude login` first.",
         }
-    except subprocess.TimeoutExpired:
-        return {"ok": False, "error": f"Gave up after {_TIMEOUT_SECONDS} seconds without finishing."}
 
+    # Stream its output live to this console as it works, instead of only
+    # showing something once the whole task is done.
+    output_lines: list[str] = []
+    start = time.monotonic()
+    for line in proc.stdout:
+        print(line, end="", flush=True)
+        output_lines.append(line)
+        if time.monotonic() - start > _TIMEOUT_SECONDS:
+            proc.kill()
+            return {"ok": False, "error": f"Gave up after {_TIMEOUT_SECONDS} seconds without finishing."}
+    proc.wait()
+    print(f"----- Claude Code finished (exit {proc.returncode}) -----\n")
+
+    output = "".join(output_lines)
     if proc.returncode != 0:
-        return {"ok": False, "error": (proc.stderr or proc.stdout).strip()[-2000:] or "claude CLI failed."}
+        return {"ok": False, "error": output.strip()[-2000:] or "claude CLI failed."}
 
-    return {"ok": True, "summary": proc.stdout.strip()[-2000:]}
+    changed = _changed_files(project_dir)
+    if changed:
+        subprocess.run(["git", "add", "-A"], cwd=project_dir, capture_output=True)
+        subprocess.run(
+            ["git", "commit", "-m", f"SARMAD: {instructions[:72]}"],
+            cwd=project_dir,
+            capture_output=True,
+        )
+        print(f"----- Changed files: {', '.join(changed)} -----\n")
+
+    return {"ok": True, "summary": output.strip()[-2000:], "files_changed": changed}
+
+
+def _changed_files(project_dir: Path) -> list[str]:
+    proc = subprocess.run(["git", "status", "--porcelain"], cwd=project_dir, capture_output=True, text=True)
+    return [line[3:].strip() for line in proc.stdout.splitlines() if line.strip()]
