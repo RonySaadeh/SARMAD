@@ -14,8 +14,8 @@ import webview
 
 _HUD_PATH = Path(__file__).parent / "assets" / "hud.html"
 
-_IDLE_SIZE = (340, 380)
-_CODING_SIZE = (400, 680)
+_IDLE_SIZE = (380, 460)
+_CODING_SIZE = (420, 720)
 
 _window: webview.Window | None = None
 _instance: "Hud | None" = None

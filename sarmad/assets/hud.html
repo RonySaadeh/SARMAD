@@ -6,29 +6,72 @@
 <style>
   :root {
     --cyan: #4ff2ff;
-    --cyan-dim: #175055;
-    --cyan-soft: #9fe9ee;
-    --bg: #050b0d;
+    --cyan-dim: #16444c;
+    --cyan-mid: #2c8b96;
+    --cyan-soft: #a9f3f7;
+    --bg: #04080a;
+    --bg2: #081217;
   }
   html, body {
     margin: 0; padding: 0; width: 100%; height: 100%;
-    background: var(--bg);
     overflow: hidden;
     font-family: Consolas, "Segoe UI", monospace;
     color: var(--cyan);
     user-select: none;
   }
+  body {
+    background:
+      repeating-linear-gradient(0deg, rgba(79,242,255,0.03) 0px, rgba(79,242,255,0.03) 1px, transparent 1px, transparent 28px),
+      repeating-linear-gradient(90deg, rgba(79,242,255,0.03) 0px, rgba(79,242,255,0.03) 1px, transparent 1px, transparent 28px),
+      radial-gradient(ellipse at 50% 38%, var(--bg2) 0%, var(--bg) 68%);
+  }
+
+  /* corner HUD framing */
+  .corner { position: fixed; width: 20px; height: 20px; border-color: var(--cyan-dim); opacity: 0.6; }
+  .corner.tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; }
+  .corner.tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; }
+  .corner.bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; }
+  .corner.br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; }
+
   #wrap {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     width: 100%; height: 100%;
-    padding: 16px 0;
+    padding: 18px 0;
     box-sizing: border-box;
   }
   #core {
     position: relative;
-    width: 200px; height: 200px;
+    width: 210px; height: 210px;
     flex-shrink: 0;
   }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes spinback { to { transform: rotate(-360deg); } }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.06); }
+  }
+
+  /* tick-mark dial ring */
+  #tick-ring {
+    position: absolute; inset: -18px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(var(--cyan) 0deg 1.3deg, transparent 1.3deg 11.25deg);
+    -webkit-mask-image: radial-gradient(circle, transparent calc(50% - 11px), black calc(50% - 11px) calc(50% - 5px), transparent calc(50% - 5px));
+            mask-image: radial-gradient(circle, transparent calc(50% - 11px), black calc(50% - 11px) calc(50% - 5px), transparent calc(50% - 5px));
+    opacity: 0.6;
+    animation: spin 70s linear infinite;
+    filter: drop-shadow(0 0 3px var(--cyan));
+  }
+
+  /* radar sweep beam */
+  #sweep {
+    position: absolute; inset: 4px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(79,242,255,0.4) 22deg, transparent 55deg);
+    animation: spin 3.4s linear infinite;
+    mix-blend-mode: screen;
+  }
+
   .ring {
     position: absolute; inset: 0;
     border-radius: 50%;
@@ -36,23 +79,62 @@
     box-shadow: 0 0 12px var(--cyan-dim) inset;
     transition: border-color 0.4s ease, box-shadow 0.4s ease;
   }
-  #ring-outer { animation: spin 14s linear infinite; border-style: dashed; }
-  #ring-mid { inset: 22px; animation: spin 9s linear infinite reverse; }
-  #ring-inner { inset: 48px; }
+  #ring-mid { inset: 24px; border-style: dashed; animation: spinback 11s linear infinite; }
+  #ring-inner { inset: 52px; }
+
   #core-glow {
-    position: absolute; inset: 72px;
+    position: absolute; inset: 78px;
     border-radius: 50%;
     background: radial-gradient(circle, var(--cyan) 0%, var(--cyan-dim) 70%, transparent 100%);
     filter: blur(2px);
     animation: pulse 2.6s ease-in-out infinite;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes pulse {
-    0%, 100% { opacity: 0.5; transform: scale(0.9); }
-    50% { opacity: 1; transform: scale(1.06); }
+
+  /* orbiting particles */
+  .orbit { position: absolute; inset: -34px; border-radius: 50%; animation: spin linear infinite; pointer-events: none; }
+  .orbit .dot {
+    position: absolute; top: 0; left: 50%;
+    width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 6px var(--cyan), 0 0 14px var(--cyan);
   }
+  #orbit-1 { animation-duration: 7s; }
+  #orbit-2 { animation-duration: 11s; animation-direction: reverse; inset: -46px; }
+  #orbit-2 .dot { opacity: 0.55; width: 4px; height: 4px; }
+  #orbit-3 { animation-duration: 16s; inset: -58px; }
+  #orbit-3 .dot { opacity: 0.35; width: 3px; height: 3px; }
+
+  /* audio waveform */
+  #waveform {
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    height: 20px; margin-top: 14px;
+    flex-shrink: 0;
+  }
+  #waveform span {
+    width: 3px; height: 5px;
+    background: var(--cyan);
+    border-radius: 2px;
+    box-shadow: 0 0 4px var(--cyan);
+    opacity: 0.35;
+    transition: opacity 0.3s ease;
+  }
+  body.listening #waveform span, body.speaking #waveform span {
+    opacity: 1;
+    animation: bar 1s ease-in-out infinite;
+  }
+  #waveform span:nth-child(1) { animation-delay: -0.6s; }
+  #waveform span:nth-child(2) { animation-delay: -0.3s; }
+  #waveform span:nth-child(3) { animation-delay: 0s; }
+  #waveform span:nth-child(4) { animation-delay: -0.45s; }
+  #waveform span:nth-child(5) { animation-delay: -0.15s; }
+  @keyframes bar {
+    0%, 100% { height: 5px; }
+    50% { height: 19px; }
+  }
+
   #status {
-    margin-top: 20px;
+    margin-top: 14px;
     letter-spacing: 4px;
     font-size: 13px;
     text-transform: uppercase;
@@ -74,17 +156,16 @@
   #transcript .sarmad { color: var(--cyan); }
 
   /* --- state variants --- */
-  body.listening .ring {
+  body.listening .ring, body.coding .ring {
     border-color: var(--cyan);
     box-shadow: 0 0 18px var(--cyan) inset;
   }
   body.listening #core-glow { animation-duration: 0.9s; }
+  body.listening #sweep, body.speaking #sweep { animation-duration: 1.4s; }
 
-  body.thinking #ring-outer { animation-duration: 3s; }
-  body.thinking #ring-mid { animation-duration: 2s; }
-  body.thinking .ring {
-    border-color: var(--cyan-soft);
-  }
+  body.thinking #ring-mid { animation-duration: 4s; }
+  body.thinking .ring { border-color: var(--cyan-soft); }
+  body.thinking #sweep { animation-duration: 1.8s; }
 
   body.speaking #core-glow { animation: pulse 0.35s ease-in-out infinite; }
   body.speaking .ring {
@@ -92,14 +173,12 @@
     box-shadow: 0 0 22px var(--cyan) inset;
   }
 
-  body.coding .ring {
-    border-color: var(--cyan);
-    box-shadow: 0 0 20px var(--cyan) inset;
-  }
   body.coding #core-glow { animation-duration: 1.2s; }
+  body.coding #waveform { opacity: 0.3; }
 
   /* --- live activity panel (coding only) --- */
   #log-panel {
+    position: relative;
     width: 300px;
     max-width: 88%;
     height: 0;
@@ -110,9 +189,9 @@
     flex-shrink: 0;
   }
   body.coding #log-panel {
-    height: 260px;
+    height: 250px;
     opacity: 1;
-    margin-top: 16px;
+    margin-top: 14px;
   }
   #log-header {
     display: flex;
@@ -144,7 +223,7 @@
     text-align: left;
     color: var(--cyan-soft);
     -webkit-mask-image: linear-gradient(to bottom, transparent, black 24px);
-    mask-image: linear-gradient(to bottom, transparent, black 24px);
+            mask-image: linear-gradient(to bottom, transparent, black 24px);
   }
   #log-lines::-webkit-scrollbar { width: 4px; }
   #log-lines::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 2px; }
@@ -154,22 +233,28 @@
     opacity: 0.9;
     animation: fadeIn 0.25s ease;
   }
-  #log-lines .task {
-    color: var(--cyan);
-    opacity: 1;
-    margin-bottom: 4px;
-  }
+  #log-lines .task { color: var(--cyan); opacity: 1; margin-bottom: 4px; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(2px); } to { opacity: 0.9; transform: translateY(0); } }
 </style>
 </head>
 <body class="idle">
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+
   <div id="wrap">
     <div id="core">
-      <div class="ring" id="ring-outer"></div>
+      <div id="tick-ring"></div>
+      <div id="sweep"></div>
       <div class="ring" id="ring-mid"></div>
       <div class="ring" id="ring-inner"></div>
       <div id="core-glow"></div>
+      <div class="orbit" id="orbit-1"><span class="dot"></span></div>
+      <div class="orbit" id="orbit-2"><span class="dot"></span></div>
+      <div class="orbit" id="orbit-3"><span class="dot"></span></div>
     </div>
+    <div id="waveform"><span></span><span></span><span></span><span></span><span></span></div>
     <div id="status">Idle — say SARMAD</div>
     <div id="transcript"></div>
     <div id="log-panel">
