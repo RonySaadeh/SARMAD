@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 
 from sarmad import config
+from sarmad import hud as hud_module
 
 _TIMEOUT_SECONDS = 600
 
@@ -35,7 +36,21 @@ def fix_project(project_name: str, instructions: str) -> dict:
     if not project_dir.is_dir():
         return {"ok": False, "error": f"No project folder named '{project_name}' under {config.PROJECTS_DIR}."}
 
+    hud = hud_module.current()
+    if hud:
+        hud.clear_log()
+        hud.set_state("coding")
+        hud.append_log(instructions, is_task=True)
+
     print(f"\n----- Claude Code working in {project_dir.name} -----")
+    try:
+        return _run(project_dir, instructions, hud)
+    finally:
+        if hud:
+            hud.set_state("thinking")
+
+
+def _run(project_dir: Path, instructions: str, hud) -> dict:
     try:
         proc = subprocess.Popen(
             ["claude", "-p", instructions, "--permission-mode", "bypassPermissions"],
@@ -51,13 +66,15 @@ def fix_project(project_name: str, instructions: str) -> dict:
             "error": "The `claude` CLI isn't installed or on PATH. Install Claude Code and run `claude login` first.",
         }
 
-    # Stream its output live to this console as it works, instead of only
-    # showing something once the whole task is done.
+    # Stream its output live to the console and the HUD as it works, instead
+    # of only showing something once the whole task is done.
     output_lines: list[str] = []
     start = time.monotonic()
     for line in proc.stdout:
         print(line, end="", flush=True)
         output_lines.append(line)
+        if hud and line.strip():
+            hud.append_log(line.rstrip())
         if time.monotonic() - start > _TIMEOUT_SECONDS:
             proc.kill()
             return {"ok": False, "error": f"Gave up after {_TIMEOUT_SECONDS} seconds without finishing."}
@@ -77,6 +94,8 @@ def fix_project(project_name: str, instructions: str) -> dict:
             capture_output=True,
         )
         print(f"----- Changed files: {', '.join(changed)} -----\n")
+        if hud:
+            hud.append_log(f"Changed: {', '.join(changed)}", is_task=True)
 
     return {"ok": True, "summary": output.strip()[-2000:], "files_changed": changed}
 
