@@ -14,7 +14,7 @@ ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5")
 FAST_MODEL = os.environ.get("FAST_MODEL", "claude-haiku-4-5-20251001")
 SMART_MODEL = os.environ.get("SMART_MODEL", "claude-opus-5")
 
-WHISPER_MODEL_SIZE = os.environ.get("WHISPER_MODEL_SIZE", "base")
+WHISPER_MODEL_SIZE = os.environ.get("WHISPER_MODEL_SIZE", "small")
 WHISPER_DEVICE = os.environ.get("WHISPER_DEVICE", "cpu")
 # faster-whisper auto-detects the spoken language per request (English, Arabic,
 # or a mix), so no separate language switch is needed for speech-to-text.

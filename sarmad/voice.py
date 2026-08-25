@@ -7,6 +7,7 @@ API key required either) plus `playsound` since edge-tts outputs mp3.
 
 import asyncio
 import io
+import os
 import re
 import tempfile
 import wave
@@ -32,7 +33,13 @@ def _get_whisper_model() -> WhisperModel:
     global _whisper_model
     if _whisper_model is None:
         # Downloads the model from Hugging Face on first run, then caches it locally.
-        _whisper_model = WhisperModel(config.WHISPER_MODEL_SIZE, device=config.WHISPER_DEVICE, compute_type="int8")
+        # cpu_threads uses every core available instead of faster-whisper's conservative default.
+        _whisper_model = WhisperModel(
+            config.WHISPER_MODEL_SIZE,
+            device=config.WHISPER_DEVICE,
+            compute_type="int8",
+            cpu_threads=os.cpu_count() or 4,
+        )
     return _whisper_model
 
 
@@ -79,7 +86,12 @@ def transcribe(wav_bytes: bytes) -> str:
         temp_path = Path(f.name)
 
     try:
-        segments, _ = _get_whisper_model().transcribe(str(temp_path))
+        segments, _ = _get_whisper_model().transcribe(
+            str(temp_path),
+            beam_size=2,
+            vad_filter=True,
+            condition_on_previous_text=False,
+        )
         return " ".join(segment.text.strip() for segment in segments).strip()
     finally:
         temp_path.unlink(missing_ok=True)
